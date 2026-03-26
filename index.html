@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>WOLF LABS | Homework: The Screen Paradox</title>
+    
+    <!-- Tipografia Épica -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Ícones Premium -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* --- PREMIUM CINEMATIC UI OVERHAUL --- */
+        :root {
+            --bg: #030408;
+            --surface: rgba(10, 12, 20, 0.75);
+            --surface-hover: rgba(255, 255, 255, 0.08);
+            --border: rgba(255, 255, 255, 0.1);
+            --accent: #1DB954;
+            --accent-glow: rgba(29, 185, 84, 0.4);
+            --correct: #1DB954;
+            --incorrect: #E50914;
+            --text-main: #FFFFFF;
+            --text-dim: #B3B3B3;
+            --font-display: 'Cinzel', serif;
+            --font-body: 'Inter', sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: linear-gradient(to top, rgba(3,4,8,1) 5%, rgba(3,4,8,0.6) 100%), 
+                        url('https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=2000&auto=format&fit=crop') no-repeat center center fixed;
+            background-size: cover;
+            color: var(--text-main);
+            font-family: var(--font-body);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* --- ATMOSFERA MÁGICA (ORBS) --- */
+        .ambient-orbs {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: 0; pointer-events: none;
+        }
+        .orb {
+            position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.25;
+            animation: floatOrb 20s infinite alternate ease-in-out;
+        }
+        .orb-1 { width: 400px; height: 400px; background: var(--accent); top: -10%; left: -10%; }
+        .orb-2 { width: 500px; height: 500px; background: #0077ff; bottom: -10%; right: -10%; animation-delay: -5s; }
+
+        /* --- CABEÇALHO --- */
+        .header {
+            position: fixed;
+            top: 0; left: 0; right: 0; z-index: 100;
+            background: linear-gradient(to bottom, rgba(3,4,8,0.9), transparent);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 20px 30px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo { font-family: var(--font-display); font-weight: 900; font-size: 1rem; letter-spacing: 3px; color: #fff; }
+        .logo span { color: var(--accent); }
+        
+        .progress-bar-container {
+            position: absolute; bottom: -1px; left: 0; right: 0; height: 4px; background: rgba(255,255,255,0.05);
+        }
+        .progress-bar { height: 100%; background: var(--accent); width: 0%; transition: width 0.4s ease; box-shadow: 0 0 15px var(--accent-glow); }
+
+        /* --- CONTEÚDO PRINCIPAL --- */
+        main {
+            flex: 1;
+            margin-top: 80px;
+            margin-bottom: 100px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 10;
+        }
+
+        .step {
+            position: absolute;
+            width: 100%;
+            max-width: 900px;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(20px);
+            transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+            visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            overflow-y: auto;
+            max-height: 75vh;
+            padding: 10px;
+        }
+
+        .step.active {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+            visibility: visible;
+            position: relative;
+        }
+
+        .step.exiting {
+            transform: scale(0.95);
+            opacity: 0;
+        }
+
+        /* --- LAYOUT DUAL PANEL --- */
+        .dual-panel { display: flex; gap: 40px; align-items: center; text-align: left; }
+        .dual-panel > * { flex: 1; }
+        @media (max-width: 768px) { .dual-panel { flex-direction: column; text-align: center; } }
+
+        /* --- TIPOGRAFIA --- */
+        .tag { color: var(--accent); font-size: 0.8rem; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 5px; }
+        h1 { font-family: var(--font-display); font-size: 3.5rem; line-height: 1.1; margin-bottom: 10px; text-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        h2 { font-family: var(--font-display); font-size: 1.8rem; color: #fff; margin-bottom: 15px; }
+        p.subtitle { color: var(--text-dim); font-size: 1.1rem; margin-bottom: 20px; font-weight: 400; }
+
+        .glass-card {
+            background: var(--surface);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            text-align: center;
+        }
+        .question-text { font-size: 1.3rem; font-weight: 700; line-height: 1.5; color: #fff; margin-bottom: 15px;}
+
+        /* --- INTERACTIVE ELEMENTS --- */
+        .mc-options { display: grid; grid-template-columns: 1fr; gap: 12px; width: 100%; margin-top: 10px;}
+        .mc-btn {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            color: #fff;
+            padding: 18px 25px;
+            border-radius: 15px;
+            font-size: 1.05rem;
+            font-weight: 700;
+            text-align: left;
+            transition: all 0.3s;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .mc-btn:hover { background: var(--surface-hover); border-color: var(--accent); transform: translateX(8px); }
+        .mc-btn.correct { border-color: var(--correct); background: rgba(29, 185, 84, 0.15); box-shadow: 0 0 20px rgba(29, 185, 84, 0.2); }
+        .mc-btn.incorrect { border-color: var(--incorrect); background: rgba(229, 9, 20, 0.1); }
+
+        /* --- BUILDER --- */
+        .drop-zone {
+            min-height: 110px;
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            gap: 10px;
+            flex-wrap: wrap;
+            background: rgba(0, 0, 0, 0.4);
+            transition: 0.3s;
+        }
+        .drop-zone.success { border-color: var(--correct); border-style: solid; background: rgba(29, 185, 84, 0.1); }
+        
+        .word-bank { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+        .word-chip {
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 500px;
+            color: #fff;
+            font-weight: 800;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .word-chip:hover { border-color: #fff; transform: translateY(-3px); background: rgba(255,255,255,0.1); }
+        .word-chip.used { opacity: 0; pointer-events: none; transform: scale(0.8); }
+
+        /* --- ERROR FINDER --- */
+        .highlight-zone { padding: 30px; background: rgba(255,255,255,0.03); border-radius: 20px; border: 1px solid var(--border); text-align: center;}
+        .error-sentence { font-size: 1.6rem; word-spacing: 6px; line-height: 1.8; font-weight: 700; color: #fff;}
+        .error-word { display: inline-block; padding: 4px 12px; cursor: pointer; border-radius: 10px; transition: 0.3s; }
+        .error-word:hover { background: rgba(255,255,255,0.1); transform: scale(1.05); }
+
+        /* --- CHAT SCENARIO --- */
+        .chat-container { display: flex; flex-direction: column; gap: 15px; margin-top: 10px;}
+        .msg { padding: 15px 20px; border-radius: 18px; max-width: 85%; font-size: 1.1rem; line-height: 1.4; text-align: left;}
+        .msg.friend { background: #282828; align-self: flex-start; border-bottom-left-radius: 4px; color: #fff; }
+        .msg.you { background: var(--accent); color: #000; align-self: flex-end; border-bottom-right-radius: 4px; font-weight: 700; box-shadow: 0 5px 15px var(--accent-glow);}
+
+        /* --- NAVIGATION --- */
+        .bottom-bar {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background: linear-gradient(to top, rgba(3,4,8,1), rgba(3,4,8,0.8));
+            backdrop-filter: blur(20px);
+            padding: 20px 40px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .next-btn {
+            background: #fff;
+            color: #000;
+            border: none;
+            padding: 18px 0;
+            border-radius: 500px;
+            font-size: 1rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            width: 100%;
+            max-width: 600px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            text-transform: uppercase;
+        }
+        .next-btn:disabled { opacity: 0.2; pointer-events: none; }
+        .next-btn.ready { background: var(--accent); box-shadow: 0 10px 30px var(--accent-glow); transform: translateY(-3px); }
+
+        @keyframes floatOrb { 0% { transform: translate(0,0); } 100% { transform: translate(50px, 30px); } }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25%, 75% { transform: translateX(-8px); } 50% { transform: translateX(8px); } }
+
+    </style>
+</head>
+<body>
+
+    <div class="ambient-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+    </div>
+
+    <header class="header">
+        <div class="logo"><i class="fa-solid fa-bolt" style="color:var(--accent); margin-right: 10px;"></i>WOLF LABS <span>|</span> HOMEWORK</div>
+        <div style="font-weight: 800; font-size: 0.9rem; color: var(--text-dim); letter-spacing: 3px;" id="step-counter">MISSION 1/17</div>
+        <div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+    </header>
+
+    <main id="homework-container">
+        <!-- Intro -->
+        <section class="step active" id="step-0">
+            <div class="dual-panel">
+                <div>
+                    <div class="tag">HOMEWORK B1</div>
+                    <h1>Screen<br>Paradox</h1>
+                    <p class="subtitle">Complete 15 challenges to master the psychology of technology and the grammar of Gerunds & Infinitives.</p>
+                    <button class="next-btn ready" style="max-width: 320px;" onclick="nextStep()"><i class="fa-solid fa-play"></i> START MISSION</button>
+                </div>
+                <div class="glass-card" style="text-align: left; padding: 30px;">
+                    <h2 style="font-size: 1.1rem; margin-bottom: 20px;"><i class="fa-solid fa-list-check" style="color:var(--accent);"></i> OBJECTIVES</h2>
+                    <ul style="list-style: none; color: #fff; line-height: 2.2; font-weight: 600; font-size: 0.95rem;">
+                        <li><i class="fa-solid fa-circle-check" style="color:var(--accent); margin-right: 10px;"></i> 5 Vocabulary Missions</li>
+                        <li><i class="fa-solid fa-circle-check" style="color:var(--accent); margin-right: 10px;"></i> 5 Grammar Structures</li>
+                        <li><i class="fa-solid fa-circle-check" style="color:var(--accent); margin-right: 10px;"></i> 5 Contextual Analyses</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Exercises will be injected here via script for cleaner code management -->
+    </main>
+
+    <!-- NAVIGATION BAR -->
+    <div class="bottom-bar" id="nav-container" style="display:none;">
+        <button class="next-btn" id="nextBtn" onclick="nextStep()">NEXT CHALLENGE <i class="fa-solid fa-arrow-right"></i></button>
+    </div>
+
+    <script>
+        const exercises = [
+            // 1: VOCAB
+            { type: 'mc', tag: 'VOCABULARY', text: 'A task that is very ordinary, repetitive, and boring is described as...', options: [
+                { text: 'A paradox', correct: false },
+                { text: 'Mundane', correct: true },
+                { text: 'An urge', correct: false }
+            ]},
+            // 2: VOCAB
+            { type: 'mc', tag: 'VOCABULARY', text: 'A person who behaves as if they know absolutely everything and refuses to learn is a...', options: [
+                { text: 'Digital pacifier', correct: false },
+                { text: 'Journalist', correct: false },
+                { text: 'Know-it-all', correct: true }
+            ]},
+            // 3: VOCAB
+            { type: 'mc', tag: 'VOCABULARY', text: 'A sudden, strong impulse or desire to check your phone is called an...', options: [
+                { text: 'Urge', correct: true },
+                { text: 'Option', correct: false },
+                { text: 'Habit', correct: false }
+            ]},
+            // 4: VOCAB
+            { type: 'mc', tag: 'VOCABULARY', text: 'The "Screen Paradox" means that when we are together physically, we are actually...', options: [
+                { text: 'More connected', correct: false },
+                { text: 'Driven in circles', correct: false },
+                { text: 'Alone on our phones', correct: true }
+            ]},
+            // 5: GRAMMAR MC
+            { type: 'mc', tag: 'GRAMMAR: GERUNDS', text: 'Identify the correct sentence where the action functions as the SUBJECT:', options: [
+                { text: 'Waiting in line is mundane.', correct: true },
+                { text: 'Wait in line is mundane.', correct: false },
+                { text: 'To waiting in line is mundane.', correct: false }
+            ]},
+            // 6: GRAMMAR MC
+            { type: 'mc', tag: 'GRAMMAR: VERB PATTERNS', text: 'Complete the sentence: "Many people avoid ________ about their screen addiction."', options: [
+                { text: 'to talk', correct: false },
+                { text: 'talking', correct: true },
+                { text: 'talk', correct: false }
+            ]},
+            // 7: GRAMMAR MC
+            { type: 'mc', tag: 'GRAMMAR: INFINITIVES', text: 'Complete the sentence: "We really need ________ a second before grabbing the phone."', options: [
+                { text: 'to pause', correct: true },
+                { text: 'pausing', correct: false },
+                { text: 'pause', correct: false }
+            ]},
+            // 8: ERROR DETECTION
+            { type: 'error', tag: 'ERROR DETECTION', text: 'Tap the word or phrase that breaks the grammar rules.', sentence: ['She', 'completely', 'avoided', 'to answer', 'the', 'question.'], correctIdx: 3 },
+            
+            // 9: ERROR DETECTION
+            { type: 'error', tag: 'ERROR DETECTION', text: 'Find the mistake in this sentence about habits.', sentence: ['He', 'really', 'enjoys', 'to watch', 'YouTube', 'for', 'hours.'], correctIdx: 3 },
+
+            // 10: BUILDER
+            { type: 'builder', tag: 'SENTENCE BUILDER', text: 'Unscramble the words to describe a common struggle with technology.', target: ['Ignoring', 'your', 'phone', 'is', 'hard'], chips: ['hard', 'your', 'is', 'Ignoring', 'phone'] },
+
+            // 11: BUILDER
+            { type: 'builder', tag: 'SENTENCE BUILDER', text: 'Assemble the words to talk about a past decision regarding entertainment.', target: ['We', 'decided', 'to', 'watch', 'a', 'movie'], chips: ['a', 'movie', 'We', 'to', 'decided', 'watch'] },
+
+            // 12: BUILDER
+            { type: 'builder', tag: 'SENTENCE BUILDER', text: 'Form a sentence about the benefit of waiting.', target: ['Waiting', 'lets', 'your', 'brain', 'work', 'better'], chips: ['better', 'work', 'brain', 'your', 'lets', 'Waiting'] },
+
+            // 13: CHAT SCENARIO
+            { type: 'chat', tag: 'CHAT CHALLENGE', text: 'Your friend is acting like a know-it-all. Choose the best response using a gerund as a subject.', options: [
+                { text: 'Knowing everything is impossible, John.', correct: true },
+                { text: 'To know everything is impossible, John.', correct: false }
+            ], msg: "I don't need to read the news. I already know everything that is happening." },
+
+            // 14: CHAT SCENARIO
+            { type: 'chat', tag: 'CHAT CHALLENGE', text: 'A friend asks why you didn\'t reply. Use the verb "finish" correctly.', options: [
+                { text: 'Sorry, I needed to finish doing my report.', correct: true },
+                { text: 'Sorry, I needed to finish to do my report.', correct: false }
+            ], msg: "Why are you late for the call?" },
+
+            // 15: FINAL TEST
+            { type: 'mc', tag: 'THE FINAL TEST', text: 'Which verb is always followed by a Gerund (-ing)?', options: [
+                { text: 'Decide', correct: false },
+                { text: 'Enjoy', correct: true },
+                { text: 'Hope', correct: false }
+            ]}
+        ];
+
+        let currentStep = 0;
+        let buildState = {};
+
+        function initExercises() {
+            const container = document.getElementById('homework-container');
+            exercises.forEach((ex, idx) => {
+                const section = document.createElement('section');
+                section.className = 'step';
+                section.id = `step-${idx + 1}`;
+                
+                let content = `<div class="tag">${ex.tag}</div>`;
+                
+                if (ex.type === 'mc') {
+                    content += `
+                        <div class="glass-card">
+                            <p class="question-text">${ex.text}</p>
+                            <div class="mc-options">
+                                ${ex.options.map(opt => `<button class="mc-btn" data-correct="${opt.correct}" onclick="selectOption(this)">${opt.text} <i class="fa-solid fa-chevron-right"></i></button>`).join('')}
+                            </div>
+                        </div>`;
+                } else if (ex.type === 'error') {
+                    content += `
+                        <div class="glass-card">
+                            <p class="question-text">${ex.text}</p>
+                            <div class="highlight-zone">
+                                <div class="error-sentence">
+                                    ${ex.sentence.map((word, wIdx) => `<span class="error-word" onclick="genericCorrect(this, ${wIdx === ex.correctIdx})">${word}</span>`).join('')}
+                                </div>
+                            </div>
+                        </div>`;
+                } else if (ex.type === 'builder') {
+                    const dzId = `dz-${idx}`;
+                    buildState[dzId] = [];
+                    content += `
+                        <h2>${ex.tag}</h2>
+                        <p class="subtitle" style="text-align: center;">${ex.text}</p>
+                        <div class="drop-zone" id="${dzId}"></div>
+                        <div class="word-bank">
+                            ${ex.chips.map(word => `<div class="word-chip" onclick="moveWord(this, '${dzId}', ${JSON.stringify(ex.target)})">${word}</div>`).join('')}
+                        </div>`;
+                } else if (ex.type === 'chat') {
+                    const chatId = `chat-${idx}`;
+                    content += `
+                        <div class="glass-card">
+                            <p class="subtitle">${ex.text}</p>
+                            <div class="chat-container" id="${chatId}">
+                                <div class="msg friend">${ex.msg}</div>
+                                <div class="mc-options">
+                                    ${ex.options.map(opt => `<button class="mc-btn" data-correct="${opt.correct}" onclick="handleChat(this, ${opt.correct}, '${chatId}')">${opt.text}</button>`).join('')}
+                                </div>
+                            </div>
+                        </div>`;
+                }
+
+                section.innerHTML = content;
+                container.appendChild(section);
+            });
+
+            // Add Outro
+            const outro = document.createElement('section');
+            outro.className = 'step';
+            outro.id = `step-${exercises.length + 1}`;
+            outro.innerHTML = `
+                <div class="glass-card" style="border-color: var(--accent); background: rgba(29, 185, 84, 0.05);">
+                    <div style="width: 100px; height: 100px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 30px auto; box-shadow: 0 0 50px var(--accent-glow);">
+                        <i class="fa-solid fa-trophy" style="font-size: 3rem; color: #000;"></i>
+                    </div>
+                    <h1 style="color: var(--accent); font-size: 2.5rem; text-shadow: none;">Mission Accomplished</h1>
+                    <p class="subtitle" style="color: #fff; font-weight: 600;">You have successfully completed all 15 challenges. Your B1 performance data is synced.</p>
+                    <button class="next-btn ready" onclick="alert('Session logged.')"><i class="fa-solid fa-power-off"></i> CLOSE SYSTEM</button>
+                </div>`;
+            container.appendChild(outro);
+        }
+
+        function updateUI() {
+            const steps = document.querySelectorAll('.step');
+            const totalSteps = steps.length;
+            const progressBar = document.getElementById('progressBar');
+            const stepCounter = document.getElementById('step-counter');
+            const nextBtn = document.getElementById('nextBtn');
+            const navContainer = document.getElementById('nav-container');
+
+            steps.forEach((step, index) => {
+                if(index === currentStep) {
+                    step.classList.remove('exiting');
+                    step.classList.add('active');
+                } else if (index < currentStep) {
+                    step.classList.remove('active');
+                    step.classList.add('exiting');
+                } else {
+                    step.classList.remove('active', 'exiting');
+                }
+            });
+
+            const progress = (currentStep / (totalSteps - 1)) * 100;
+            progressBar.style.width = `${progress}%`;
+
+            if(currentStep === 0 || currentStep === totalSteps - 1) {
+                navContainer.style.display = 'none';
+            } else {
+                navContainer.style.display = 'flex';
+                nextBtn.disabled = true;
+                nextBtn.classList.remove('ready');
+            }
+
+            stepCounter.innerText = currentStep === 0 ? "MISSION START" : currentStep === totalSteps - 1 ? "FINISH" : `CHALLENGE ${currentStep}/${totalSteps - 2}`;
+        }
+
+        function nextStep() {
+            const steps = document.querySelectorAll('.step');
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                updateUI();
+            }
+        }
+
+        function selectOption(btn) {
+            const parentStep = btn.closest('.step');
+            if (parentStep.classList.contains('answered-correctly')) return;
+
+            if (btn.dataset.correct === "true") {
+                btn.classList.add('correct');
+                const allBtns = parentStep.querySelectorAll('.mc-btn');
+                allBtns.forEach(b => { if (b !== btn) b.style.opacity = '0.3'; b.style.pointerEvents = 'none'; });
+                parentStep.classList.add('answered-correctly');
+                document.getElementById('nextBtn').disabled = false;
+                document.getElementById('nextBtn').classList.add('ready');
+            } else {
+                btn.classList.add('incorrect');
+                btn.style.animation = 'shake 0.4s';
+                btn.style.pointerEvents = 'none';
+                setTimeout(() => { btn.style.animation = ''; }, 400);
+            }
+        }
+
+        function moveWord(chip, dzId, targetArray) {
+            if(chip.classList.contains('used')) return;
+            const dz = document.getElementById(dzId);
+            const newChip = document.createElement('div');
+            newChip.className = 'word-chip';
+            newChip.style.background = 'var(--accent)';
+            newChip.style.color = '#000';
+            newChip.innerText = chip.innerText;
+            dz.appendChild(newChip);
+            
+            chip.classList.add('used');
+            buildState[dzId].push(chip.innerText);
+
+            if(buildState[dzId].length === targetArray.length) {
+                if(JSON.stringify(buildState[dzId]) === JSON.stringify(targetArray)) {
+                    dz.classList.add('success');
+                    document.getElementById('nextBtn').disabled = false;
+                    document.getElementById('nextBtn').classList.add('ready');
+                } else {
+                    dz.style.borderColor = 'var(--incorrect)';
+                    dz.style.animation = 'shake 0.4s';
+                    setTimeout(() => {
+                        dz.innerHTML = '';
+                        dz.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                        dz.style.animation = '';
+                        buildState[dzId] = [];
+                        chip.parentElement.querySelectorAll('.word-chip').forEach(c => c.classList.remove('used'));
+                    }, 1000);
+                }
+            }
+        }
+
+        function genericCorrect(btn, isCorrect) {
+            const parentStep = btn.closest('.step');
+            if (parentStep.classList.contains('answered-correctly')) return;
+
+            if(isCorrect) {
+                btn.style.backgroundColor = 'var(--correct)';
+                btn.style.color = '#000';
+                parentStep.classList.add('answered-correctly');
+                const words = btn.parentElement.querySelectorAll('.error-word');
+                words.forEach(w => { if(w !== btn) w.style.opacity = '0.3'; w.style.pointerEvents = 'none'; });
+                document.getElementById('nextBtn').disabled = false;
+                document.getElementById('nextBtn').classList.add('ready');
+            } else {
+                btn.style.backgroundColor = 'var(--incorrect)';
+                btn.style.color = '#fff';
+                btn.style.animation = 'shake 0.4s';
+                setTimeout(() => { btn.style.animation = ''; btn.style.backgroundColor = 'transparent'; }, 800);
+            }
+        }
+
+        function handleChat(btn, isCorrect, chatId) {
+            const container = document.getElementById(chatId);
+            const parentStep = btn.closest('.step');
+            if (parentStep.classList.contains('answered-correctly')) return;
+
+            if(isCorrect) {
+                const options = container.querySelectorAll('.mc-btn');
+                options.forEach(opt => opt.style.display = 'none');
+                container.innerHTML += `<div class="msg you">${btn.innerText}</div>`;
+                parentStep.classList.add('answered-correctly');
+                document.getElementById('nextBtn').disabled = false;
+                document.getElementById('nextBtn').classList.add('ready');
+            } else {
+                btn.classList.add('incorrect');
+                btn.style.animation = 'shake 0.4s';
+                btn.style.pointerEvents = 'none';
+                setTimeout(() => { btn.style.animation = ''; }, 400);
+            }
+        }
+
+        window.onload = () => {
+            initExercises();
+            updateUI();
+        }
+    </script>
+</body>
+</html>
